@@ -1,4 +1,12 @@
+
+
+  const express = require("express");
+const path = require("path");
 const { createClient } = require("@supabase/supabase-js");
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const PUBLIC_DIR = path.join(__dirname, "public");
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -18,15 +26,8 @@ const supabase = createClient(
   SUPABASE_SERVICE_ROLE_KEY
 );
 
-const express = require("express");
-const path = require("path");
-const sqlite3 = require("sqlite3").verbose();
-const fs = require("fs");
+app.use(express.json());
 
-
-
-const app = express();
-const PORT = process.env.PORT || 3000;
 function requireAdmin(req, res, next) {
   const adminUser = process.env.ADMIN_USER || "admin";
   const adminPassword = process.env.ADMIN_PASSWORD || "admin1234!";
@@ -49,9 +50,16 @@ function requireAdmin(req, res, next) {
   res.setHeader("WWW-Authenticate", 'Basic realm="Admin Area"');
   return res.status(401).send("아이디 또는 비밀번호가 올바르지 않습니다.");
 }
-const PUBLIC_DIR = path.join(__dirname, "public");
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/admin", requireAdmin, (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
+});
+
+app.get("/admin.html", requireAdmin, (req, res) => {
+  res.redirect("/admin");
+});
+
+app.use(express.static(PUBLIC_DIR));
 
 
 // Render 배포 시에는 환경변수로 반드시 변경하세요.
