@@ -23,9 +23,7 @@ const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
 const fs = require("fs");
 
-app.get("/admin", requireAdmin, (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
-});
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -144,6 +142,10 @@ db.serialize(() => {
 
 app.get(["/", "/index"], (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+});
+
+app.get("/admin", requireAdmin, (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
 });
 
 app.get(["/admin", "/admin/"], adminAuth, (req, res) => {
