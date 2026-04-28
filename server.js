@@ -25,6 +25,28 @@ const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+function requireAdmin(req, res, next) {
+  const adminUser = process.env.ADMIN_USER || "admin";
+  const adminPassword = process.env.ADMIN_PASSWORD || "admin1234!";
+
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Basic ")) {
+    res.setHeader("WWW-Authenticate", 'Basic realm="Admin Area"');
+    return res.status(401).send("관리자 로그인이 필요합니다.");
+  }
+
+  const encoded = authHeader.split(" ")[1];
+  const decoded = Buffer.from(encoded, "base64").toString("utf-8");
+  const [inputUser, inputPassword] = decoded.split(":");
+
+  if (inputUser === adminUser && inputPassword === adminPassword) {
+    return next();
+  }
+
+  res.setHeader("WWW-Authenticate", 'Basic realm="Admin Area"');
+  return res.status(401).send("아이디 또는 비밀번호가 올바르지 않습니다.");
+}
 const PUBLIC_DIR = path.join(__dirname, "public");
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
@@ -121,11 +143,21 @@ app.get(["/", "/index"], (req, res) => {
 });
 
 app.get(["/admin", "/admin/"], adminAuth, (req, res) => {
+
+
+
+
+
+
   const adminPath = path.join(PUBLIC_DIR, "admin.html");
   if (!fs.existsSync(adminPath)) {
     return res.status(404).send("admin.html 파일을 찾을 수 없습니다. public 폴더를 확인하세요.");
   }
   res.sendFile(adminPath);
+});
+
+app.get("/admin", requireAdmin, (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
 });
 
 app.get("/api/reservations", requireAdmin, async (req, res) => {
