@@ -9,9 +9,6 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-const PUBLIC_DIR = path.join(__dirname, "public");
 
 // Render 배포 시에는 환경변수로 반드시 변경하세요.
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
