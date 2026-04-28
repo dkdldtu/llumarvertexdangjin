@@ -1,6 +1,4 @@
-
-
-  const express = require("express");
+const express = require("express");
 const path = require("path");
 const { createClient } = require("@supabase/supabase-js");
 
@@ -26,51 +24,6 @@ const supabase = createClient(
   SUPABASE_SERVICE_ROLE_KEY
 );
 
-app.use(express.json());
-
-function requireAdmin(req, res, next) {
-  const adminUser = process.env.ADMIN_USER || "admin";
-  const adminPassword = process.env.ADMIN_PASSWORD || "admin1234!";
-
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Basic ")) {
-    res.setHeader("WWW-Authenticate", 'Basic realm="Admin Area"');
-    return res.status(401).send("관리자 로그인이 필요합니다.");
-  }
-
-  const encoded = authHeader.split(" ")[1];
-  const decoded = Buffer.from(encoded, "base64").toString("utf-8");
-  const [inputUser, inputPassword] = decoded.split(":");
-
-  if (inputUser === adminUser && inputPassword === adminPassword) {
-    return next();
-  }
-
-  res.setHeader("WWW-Authenticate", 'Basic realm="Admin Area"');
-  return res.status(401).send("아이디 또는 비밀번호가 올바르지 않습니다.");
-}
-
-app.get("/admin", requireAdmin, (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
-});
-
-app.get("/admin.html", requireAdmin, (req, res) => {
-  res.redirect("/admin");
-});
-
-app.use(express.static(PUBLIC_DIR));
-
-
-// Render 배포 시에는 환경변수로 반드시 변경하세요.
-const ADMIN_USER = process.env.ADMIN_USER || "admin";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin1234!";
-
-// 무료 Render에서는 파일 저장소가 재시작/재배포 시 초기화될 수 있습니다.
-// 테스트용은 기본값으로 충분하고, 운영용은 Render Disk 또는 외부 DB 사용을 권장합니다.
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, "data", "reservations.db");
-fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-
 app.disable("x-powered-by");
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
@@ -83,82 +36,53 @@ app.use((req, res, next) => {
   next();
 });
 
-function adminAuth(req, res, next) {
-  const header = req.headers.authorization || "";
-  const [scheme, encoded] = header.split(" ");
+// 관리자 인증
+function requireAdmin(req, res, next) {
+  const adminUser = process.env.ADMIN_USER || "admin";
+  const adminPassword = process.env.ADMIN_PASSWORD || "admin1234!";
 
-  if (scheme === "Basic" && encoded) {
-    const decoded = Buffer.from(encoded, "base64").toString("utf8");
-    const separatorIndex = decoded.indexOf(":");
-    const user = decoded.slice(0, separatorIndex);
-    const pass = decoded.slice(separatorIndex + 1);
+  const authHeader = req.headers.authorization;
 
-    if (user === ADMIN_USER && pass === ADMIN_PASSWORD) {090807
-      return next();
-    }
+  if (!authHeader || !authHeader.startsWith("Basic ")) {
+    res.setHeader("WWW-Authenticate", 'Basic realm="Reservation Admin"');
+    return res.status(401).send("관리자 로그인이 필요합니다.");
+  }
+
+  const encoded = authHeader.split(" ")[1];
+  const decoded = Buffer.from(encoded, "base64").toString("utf-8");
+  const separatorIndex = decoded.indexOf(":");
+
+  const inputUser = decoded.slice(0, separatorIndex);
+  const inputPassword = decoded.slice(separatorIndex + 1);
+
+  if (inputUser === adminUser && inputPassword === adminPassword) {
+    return next();
   }
 
   res.setHeader("WWW-Authenticate", 'Basic realm="Reservation Admin"');
-  return res.status(401).send(`
-    <!doctype html>
-    <html lang="ko">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>관리자 인증 필요</title>
-        <style>
-          body { font-family: Arial, sans-serif; background:#f5f7fa; color:#111; padding:40px; line-height:1.7; }
-          .box { max-width:520px; margin:80px auto; background:white; border-radius:22px; padding:34px; box-shadow:0 14px 38px rgba(0,0,0,.08); }
-          a { color:#2563eb; font-weight:700; }
-        </style>
-      </head>
-      <body>
-        <div class="box">
-          <h1>관리자 인증이 필요합니다</h1>
-          <p>예약 DB 확인 페이지는 관리자 계정으로만 접근할 수 있습니다.</p>
-          <p><a href="/">홈페이지로 이동</a></p>
-        </div>
-      </body>
-    </html>
-  `);
+  return res.status(401).send("아이디 또는 비밀번호가 올바르지 않습니다.");
 }
 
+// 관리자 페이지 보호
+app.get(["/admin", "/admin/"], requireAdmin, (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
+});
+
+// admin.html 직접 접근도 보호
+app.get("/admin.html", requireAdmin, (req, res) => {
+  res.redirect("/admin");
+});
+
+// 정적 파일 제공
 app.use(express.static(PUBLIC_DIR));
 
-const db = new sqlite3.Database(DB_PATH, (err) => {
-  if (err) {
-    console.error("DB 연결 오류:", err.message);
-  } else {
-    console.log("DB 연결 완료:", DB_PATH);
-  }
-});
-
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS reservations (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      phone TEXT NOT NULL,
-      car TEXT,
-      service_type TEXT,
-      preferred_date TEXT,
-      memo TEXT,
-      created_at TEXT DEFAULT (datetime('now', 'localtime'))
-    )
-  `);
-});
-
+// 메인 페이지
 app.get(["/", "/index"], (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 
-app.get("/admin", requireAdmin, (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
-});
-
-app.get(["/admin", "/admin/"], adminAuth, (req, res) => {
-
-  app.post("/api/reservations", async (req, res) => {
+// 예약 저장 API
+app.post("/api/reservations", async (req, res) => {
   try {
     const { name, phone, car, serviceType, preferredDate, memo } = req.body;
 
@@ -184,34 +108,25 @@ app.get(["/admin", "/admin/"], adminAuth, (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
-    res.json({
+    return res.json({
       ok: true,
       message: "예약이 저장되었습니다.",
       reservation: data
     });
   } catch (error) {
     console.error("예약 저장 오류:", error);
-    res.status(500).json({
+    return res.status(500).json({
       ok: false,
       message: "예약 저장 중 오류가 발생했습니다."
     });
   }
 });
 
-
-
-
-
-  const adminPath = path.join(PUBLIC_DIR, "admin.html");
-  if (!fs.existsSync(adminPath)) {
-    return res.status(404).send("admin.html 파일을 찾을 수 없습니다. public 폴더를 확인하세요.");
-  }
-  res.sendFile(adminPath);
-});
-
-
+// 예약 조회 API - 관리자 인증 필요
 app.get("/api/reservations", requireAdmin, async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -219,7 +134,9 @@ app.get("/api/reservations", requireAdmin, async (req, res) => {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
     const reservations = data.map((item) => ({
       id: item.id,
@@ -232,34 +149,30 @@ app.get("/api/reservations", requireAdmin, async (req, res) => {
       createdAt: item.created_at
     }));
 
-    res.json({
+    return res.json({
       ok: true,
       reservations
     });
   } catch (error) {
     console.error("예약 조회 오류:", error);
-    res.status(500).json({
+    return res.status(500).json({
       ok: false,
       message: "예약 조회 중 오류가 발생했습니다."
     });
   }
 });
 
-// 개인정보가 포함되므로 조회 API는 관리자 인증 적용
-app.get("/api/reservations", adminAuth, (req, res) => {
-  db.all("SELECT * FROM reservations ORDER BY id DESC", [], (err, rows) => {
-    if (err) {
-      console.error("예약 조회 오류:", err.message);
-      return res.status(500).json({ ok: false, message: "예약 목록 조회 중 오류가 발생했습니다." });
-    }
-    res.json({ ok: true, reservations: rows });
+// 상태 확인
+app.get("/health", (req, res) => {
+  res.json({
+    ok: true,
+    service: "tinting-shop",
+    db: "supabase",
+    time: new Date().toISOString()
   });
 });
 
-app.get("/health", (req, res) => {
-  res.json({ ok: true, service: "tinting-shop", time: new Date().toISOString() });
-});
-
+// 404
 app.use((req, res) => {
   res.status(404).send(`
     <h1>페이지를 찾을 수 없습니다.</h1>
@@ -268,15 +181,13 @@ app.use((req, res) => {
   `);
 });
 
-process.on("SIGINT", () => {
-  db.close(() => process.exit(0));
-});
-
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`홈페이지: http://localhost:${PORT}`);
   console.log(`관리자 페이지: http://localhost:${PORT}/admin`);
   console.log(`예약 API: http://localhost:${PORT}/api/reservations`);
+  console.log(`상태 확인: http://localhost:${PORT}/health`);
+
   if (!process.env.ADMIN_PASSWORD) {
-    console.warn("주의: ADMIN_PASSWORD 환경변수가 없습니다. 기본 비밀번호(admin1234!)가 사용됩니다. Render 배포 시 반드시 변경하세요.");
+    console.warn("주의: ADMIN_PASSWORD 환경변수가 없습니다. 기본 비밀번호(admin1234!)가 사용됩니다.");
   }
 });
