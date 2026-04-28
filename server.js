@@ -134,9 +134,7 @@ app.get("/api/reservations", requireAdmin, async (req, res) => {
       .select("id, name, phone, car, service_type, preferred_date, memo, created_at")
       .order("created_at", { ascending: false });
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
     const reservations = data.map((item) => ({
       id: item.id,
@@ -149,19 +147,18 @@ app.get("/api/reservations", requireAdmin, async (req, res) => {
       createdAt: item.created_at
     }));
 
-    return res.json({
+    res.json({
       ok: true,
       reservations
     });
   } catch (error) {
     console.error("예약 조회 오류:", error);
-    return res.status(500).json({
+    res.status(500).json({
       ok: false,
       message: "예약 조회 중 오류가 발생했습니다."
     });
   }
 });
-
 // 상태 확인
 app.get("/health", (req, res) => {
   res.json({
