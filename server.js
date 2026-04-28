@@ -23,6 +23,10 @@ const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
 const fs = require("fs");
 
+app.get("/admin", requireAdmin, (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
+});
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 function requireAdmin(req, res, next) {
@@ -156,9 +160,6 @@ app.get(["/admin", "/admin/"], adminAuth, (req, res) => {
   res.sendFile(adminPath);
 });
 
-app.get("/admin", requireAdmin, (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
-});
 
 app.get("/api/reservations", requireAdmin, async (req, res) => {
   try {
