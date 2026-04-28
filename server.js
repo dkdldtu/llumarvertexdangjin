@@ -115,36 +115,37 @@ app.get(["/admin", "/admin/"], adminAuth, (req, res) => {
   res.sendFile(adminPath);
 });
 
-app.post("/api/reservations", (req, res) => {
-  const { name, phone, car, serviceType, preferredDate, memo } = req.body;
+app.get("/api/reservations", requireAdmin, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("reservations")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  if (!name || !phone) {
-    return res.status(400).json({ ok: false, message: "이름과 연락처는 필수입니다." });
+    if (error) throw error;
+
+    const reservations = data.map((item) => ({
+      id: item.id,
+      name: item.name,
+      phone: item.phone,
+      car: item.car,
+      serviceType: item.service_type,
+      preferredDate: item.preferred_date,
+      memo: item.memo,
+      createdAt: item.created_at
+    }));
+
+    res.json({
+      ok: true,
+      reservations
+    });
+  } catch (error) {
+    console.error("예약 조회 오류:", error);
+    res.status(500).json({
+      ok: false,
+      message: "예약 조회 중 오류가 발생했습니다."
+    });
   }
-
-  const sql = `
-    INSERT INTO reservations (name, phone, car, service_type, preferred_date, memo)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `;
-
-  db.run(
-    sql,
-    [
-      String(name).trim(),
-      String(phone).trim(),
-      String(car || "").trim(),
-      String(serviceType || "").trim(),
-      String(preferredDate || "").trim(),
-      String(memo || "").trim()
-    ],
-    function (err) {
-      if (err) {
-        console.error("예약 저장 오류:", err.message);
-        return res.status(500).json({ ok: false, message: "DB 저장 중 오류가 발생했습니다." });
-      }
-      res.json({ ok: true, id: this.lastID });
-    }
-  );
 });
 
 // 개인정보가 포함되므로 조회 API는 관리자 인증 적용
