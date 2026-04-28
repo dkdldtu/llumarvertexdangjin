@@ -98,16 +98,40 @@
   function openKakaoTalk() { if (KAKAO_CHANNEL_URL === "https://open.kakao.com/o/sdKI9rsi") { alert("https://open.kakao.com/o/sdKI9rsi"); return; } whttps://open.kakao.com/o/sdKI9rsindow.open(KAKAO_CHANNEL_URL, "_blank"); }
   function showFormMessage(type, text) { const box = document.getElementById("formMessage"); box.className = "form-message " + type; box.textContent = text; }
   async function saveReservation(e) {
-    e.preventDefault();
-    const reservationData = { name: document.getElementById("name").value, phone: document.getElementById("phone").value, car: document.getElementById("car").value, serviceType: document.getElementById("serviceType").value, preferredDate: document.getElementById("date").value, memo: document.getElementById("memo").value };
-    try {
-      const response = await fetch("/api/reservations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(reservationData) });
-      const result = await response.json();
-      if (!response.ok || !result.ok) throw new Error(result.message || "예약 저장 실패");
-      showFormMessage("success", "예약 문의가 DB에 저장되었습니다. 확인 후 연락드리겠습니다.");
-      e.target.reset();
-    } catch (error) { console.error(error); showFormMessage("error", "서버 저장에 실패했습니다. 서버 실행 여부를 확인하거나 전화/카카오톡으로 문의해주세요."); }
+  e.preventDefault();
+
+  const reservationData = {
+    name: document.getElementById("name").value,
+    phone: document.getElementById("phone").value,
+    car: document.getElementById("car").value,
+    serviceType: document.getElementById("serviceType").value,
+    preferredDate: document.getElementById("date").value,
+    memo: document.getElementById("memo").value
+  };
+
+  try {
+    const response = await fetch("/api/reservations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(reservationData)
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || "예약 저장 실패");
+    }
+
+    alert("예약 문의가 저장되었습니다. 확인 후 연락드리겠습니다.");
+    e.target.reset();
+
+  } catch (error) {
+    console.error(error);
+    alert("예약 저장에 실패했습니다. 전화 또는 카카오톡으로 문의해주세요.");
   }
+}
   const headerEl = document.querySelector("header");
   window.addEventListener("scroll", () => { window.scrollY > 40 ? headerEl.classList.add("scrolled") : headerEl.classList.remove("scrolled"); });
   const revealTargets = document.querySelectorAll(".title, .card, .gallery img, .before-after-card, .before-after-cta, .reserve-box, .info, .map-box");
