@@ -148,6 +148,47 @@ app.get(["/", "/index"], (req, res) => {
 
 app.get(["/admin", "/admin/"], adminAuth, (req, res) => {
 
+  app.post("/api/reservations", async (req, res) => {
+  try {
+    const { name, phone, car, serviceType, preferredDate, memo } = req.body;
+
+    if (!name || !phone) {
+      return res.status(400).json({
+        ok: false,
+        message: "이름과 연락처는 필수입니다."
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("reservations")
+      .insert([
+        {
+          name,
+          phone,
+          car,
+          service_type: serviceType,
+          preferred_date: preferredDate,
+          memo
+        }
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      ok: true,
+      message: "예약이 저장되었습니다.",
+      reservation: data
+    });
+  } catch (error) {
+    console.error("예약 저장 오류:", error);
+    res.status(500).json({
+      ok: false,
+      message: "예약 저장 중 오류가 발생했습니다."
+    });
+  }
+});
 
 
 
