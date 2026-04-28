@@ -1,21 +1,19 @@
 {
-  "name": "llumar-vertex-dangjin-site",
+  "name": "llumarvertexdangjin",
   "version": "1.0.0",
-  "description": "루마 버텍스 당진 채운점 홈페이지 및 예약 DB 서버",
+  "description": "LLumar Vertex Dangjin reservation website",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node server.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": "20.x"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.49.0",
+    "basic-auth": "^2.0.1",
+    "cors": "^2.8.5",
     "express": "^4.18.3",
+    "sqlite3": "^5.1.7"
   }
-}
-"dependencies": {
-  "@supabase/supabase-js": "^2.49.0",
-  "express": "^4.18.2",
-  "sqlite3": "^5.1.7"
 }
