@@ -259,156 +259,230 @@
   </main>
 
   <script>
-    let reservations = [];
-    let filteredReservations = [];
+  let reservations = [];
+  let filteredReservations = [];
 
-    const $ = (id) => document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
 
-    function escapeHTML(value) {
-      return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+  function escapeHTML(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function getCreatedAt(item) {
+    return item.createdAt || item.created_at || "";
+  }
+
+  function getServiceType(item) {
+    return item.serviceType || item.service_type || "";
+  }
+
+  function getPreferredDate(item) {
+    return item.preferredDate || item.preferred_date || "";
+  }
+
+  function formatDate(value) {
+    if (!value) return "-";
+
+    const date = new Date(value);
+
+    if (isNaN(date.getTime())) {
+      return String(value).replace("T", " ").slice(0, 16);
     }
 
-    function formatDate(value) {
-      if (!value) return "-";
-      return value.replace("T", " ").slice(0, 16);
-    }
+    return date.toLocaleString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  }
 
-    function isToday(value) {
-      if (!value) return false;
-      const today = new Date();
+  function isToday(value) {
+    if (!value) return false;
+
+    const date = new Date(value);
+    const today = new Date();
+
+    if (isNaN(date.getTime())) {
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, "0");
       const dd = String(today.getDate()).padStart(2, "0");
       return String(value).startsWith(`${yyyy}-${mm}-${dd}`);
     }
 
-    async function loadReservations() {
-      $("loading").style.display = "block";
-      $("tableWrap").style.display = "none";
-      $("mobileCards").innerHTML = "";
-      $("empty").style.display = "none";
+    return (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    );
+  }
 
-      try {
-        const res = await fetch("/api/reservations");
-        const data = await res.json();
-        if (!res.ok || !data.ok) throw new Error(data.message || "조회 실패");
-        reservations = data.reservations || [];
-        applyFilters();
-      } catch (err) {
-        console.error(err);
-        $("loading").innerHTML = "예약 목록을 불러오지 못했습니다.<br>서버 실행 여부를 확인해주세요.";
-      }
-    }
+  async function loadReservations() {
+    $("loading").style.display = "block";
+    $("tableWrap").style.display = "none";
+    $("mobileCards").innerHTML = "";
+    $("empty").style.display = "none";
 
-    function applyFilters() {
-      const keyword = $("searchInput").value.trim().toLowerCase();
-      const service = $("serviceFilter").value;
-      const date = $("dateFilter").value;
+    try {
+      const res = await fetch("/api/reservations");
+      const data = await res.json();
 
-      filteredReservations = reservations.filter((item) => {
-        const keywordText = [item.name, item.phone, item.car, item.service_type, item.preferred_date, item.memo]
-          .join(" ").toLowerCase();
-        const matchKeyword = !keyword || keywordText.includes(keyword);
-        const matchService = !service || item.service_type === service;
-        const matchDate = !date || item.preferred_date === date;
-        return matchKeyword && matchService && matchDate;
-      });
-
-      renderSummary();
-      renderTable();
-      renderMobileCards();
-    }
-
-    function renderSummary() {
-      $("totalCount").textContent = reservations.length;
-      $("todayCount").textContent = reservations.filter((r) => isToday(r.created_at)).length;
-      $("filteredCount").textContent = filteredReservations.length;
-      $("latestDate").textContent = reservations[0] ? formatDate(reservations[0].created_at) : "-";
-    }
-
-    function renderTable() {
-      const tbody = $("reservationTable");
-      tbody.innerHTML = "";
-      $("loading").style.display = "none";
-
-      if (filteredReservations.length === 0) {
-        $("tableWrap").style.display = "none";
-        $("empty").style.display = "block";
-        return;
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || "조회 실패");
       }
 
-      $("empty").style.display = "none";
-      $("tableWrap").style.display = "block";
-
-      filteredReservations.forEach((r) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td><span class="id-badge">#${escapeHTML(r.id)}</span></td>
-          <td>${escapeHTML(formatDate(r.created_at))}</td>
-          <td><strong>${escapeHTML(r.name)}</strong></td>
-          <td><a class="phone-link" href="tel:${escapeHTML(r.phone)}">${escapeHTML(r.phone)}</a></td>
-          <td>${escapeHTML(r.car || "-")}</td>
-          <td><span class="service-badge">${escapeHTML(r.service_type || "미선택")}</span></td>
-          <td>${escapeHTML(r.preferred_date || "-")}</td>
-          <td class="memo-cell">${escapeHTML(r.memo || "-")}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+      reservations = data.reservations || [];
+      applyFilters();
+    } catch (err) {
+      console.error(err);
+      $("loading").innerHTML = "예약 목록을 불러오지 못했습니다.<br>서버 실행 여부를 확인해주세요.";
     }
+  }
 
-    function renderMobileCards() {
-      const wrap = $("mobileCards");
-      wrap.innerHTML = "";
-      if (filteredReservations.length === 0) return;
+  function applyFilters() {
+    const keyword = $("searchInput").value.trim().toLowerCase();
+    const service = $("serviceFilter").value;
+    const date = $("dateFilter").value;
 
-      filteredReservations.forEach((r) => {
-        const card = document.createElement("article");
-        card.className = "reservation-card";
-        card.innerHTML = `
-          <div class="top">
-            <h3>${escapeHTML(r.name)}</h3>
-            <span class="id-badge">#${escapeHTML(r.id)}</span>
-          </div>
-          <p><strong>접수일</strong> ${escapeHTML(formatDate(r.created_at))}</p>
-          <p><strong>연락처</strong> <a class="phone-link" href="tel:${escapeHTML(r.phone)}">${escapeHTML(r.phone)}</a></p>
-          <p><strong>차량명</strong> ${escapeHTML(r.car || "-")}</p>
-          <p><strong>희망 시공</strong> <span class="service-badge">${escapeHTML(r.service_type || "미선택")}</span></p>
-          <p><strong>희망 날짜</strong> ${escapeHTML(r.preferred_date || "-")}</p>
-          <p><strong>문의사항</strong><br>${escapeHTML(r.memo || "-")}</p>
-        `;
-        wrap.appendChild(card);
-      });
-    }
+    filteredReservations = reservations.filter((item) => {
+      const serviceType = getServiceType(item);
+      const preferredDate = getPreferredDate(item);
 
-    function downloadCSV() {
-      const header = ["번호", "접수일", "이름", "연락처", "차량명", "희망시공", "희망날짜", "문의사항"];
-      const rows = filteredReservations.map((r) => [
-        r.id, formatDate(r.created_at), r.name, r.phone, r.car, r.service_type, r.preferred_date, r.memo
-      ]);
-      const csv = [header, ...rows].map((row) =>
-        row.map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`).join(",")
-      ).join("\n");
+      const keywordText = [
+        item.name,
+        item.phone,
+        item.car,
+        serviceType,
+        preferredDate,
+        item.memo
+      ].join(" ").toLowerCase();
 
-      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `reservations_${new Date().toISOString().slice(0,10)}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
+      const matchKeyword = !keyword || keywordText.includes(keyword);
+      const matchService = !service || serviceType === service;
+      const matchDate = !date || preferredDate === date;
 
-    ["searchInput", "serviceFilter", "dateFilter"].forEach((id) => {
-      $(id).addEventListener("input", applyFilters);
-      $(id).addEventListener("change", applyFilters);
+      return matchKeyword && matchService && matchDate;
     });
 
-    loadReservations();
-  </script>
+    renderSummary();
+    renderTable();
+    renderMobileCards();
+  }
+
+  function renderSummary() {
+    $("totalCount").textContent = reservations.length;
+    $("todayCount").textContent = reservations.filter((r) => isToday(getCreatedAt(r))).length;
+    $("filteredCount").textContent = filteredReservations.length;
+    $("latestDate").textContent = reservations[0] ? formatDate(getCreatedAt(reservations[0])) : "-";
+  }
+
+  function renderTable() {
+    const tbody = $("reservationTable");
+    tbody.innerHTML = "";
+    $("loading").style.display = "none";
+
+    if (filteredReservations.length === 0) {
+      $("tableWrap").style.display = "none";
+      $("empty").style.display = "block";
+      return;
+    }
+
+    $("empty").style.display = "none";
+    $("tableWrap").style.display = "block";
+
+    filteredReservations.forEach((r) => {
+      const createdAt = getCreatedAt(r);
+      const serviceType = getServiceType(r);
+      const preferredDate = getPreferredDate(r);
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><span class="id-badge">#${escapeHTML(r.id)}</span></td>
+        <td>${escapeHTML(formatDate(createdAt))}</td>
+        <td><strong>${escapeHTML(r.name)}</strong></td>
+        <td><a class="phone-link" href="tel:${escapeHTML(r.phone)}">${escapeHTML(r.phone)}</a></td>
+        <td>${escapeHTML(r.car || "-")}</td>
+        <td><span class="service-badge">${escapeHTML(serviceType || "미선택")}</span></td>
+        <td>${escapeHTML(preferredDate || "-")}</td>
+        <td class="memo-cell">${escapeHTML(r.memo || "-")}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderMobileCards() {
+    const wrap = $("mobileCards");
+    wrap.innerHTML = "";
+
+    if (filteredReservations.length === 0) return;
+
+    filteredReservations.forEach((r) => {
+      const createdAt = getCreatedAt(r);
+      const serviceType = getServiceType(r);
+      const preferredDate = getPreferredDate(r);
+
+      const card = document.createElement("article");
+      card.className = "reservation-card";
+      card.innerHTML = `
+        <div class="top">
+          <h3>${escapeHTML(r.name)}</h3>
+          <span class="id-badge">#${escapeHTML(r.id)}</span>
+        </div>
+        <p><strong>접수일</strong> ${escapeHTML(formatDate(createdAt))}</p>
+        <p><strong>연락처</strong> <a class="phone-link" href="tel:${escapeHTML(r.phone)}">${escapeHTML(r.phone)}</a></p>
+        <p><strong>차량명</strong> ${escapeHTML(r.car || "-")}</p>
+        <p><strong>희망 시공</strong> <span class="service-badge">${escapeHTML(serviceType || "미선택")}</span></p>
+        <p><strong>희망 날짜</strong> ${escapeHTML(preferredDate || "-")}</p>
+        <p><strong>문의사항</strong><br>${escapeHTML(r.memo || "-")}</p>
+      `;
+      wrap.appendChild(card);
+    });
+  }
+
+  function downloadCSV() {
+    const header = ["번호", "접수일", "이름", "연락처", "차량명", "희망시공", "희망날짜", "문의사항"];
+
+    const rows = filteredReservations.map((r) => [
+      r.id,
+      formatDate(getCreatedAt(r)),
+      r.name,
+      r.phone,
+      r.car,
+      getServiceType(r),
+      getPreferredDate(r),
+      r.memo
+    ]);
+
+    const csv = [header, ...rows].map((row) =>
+      row.map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`).join(",")
+    ).join("\n");
+
+    const blob = new Blob(["\uFEFF" + csv], {
+      type: "text/csv;charset=utf-8;"
+    });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download = `reservations_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  }
+
+  ["searchInput", "serviceFilter", "dateFilter"].forEach((id) => {
+    $(id).addEventListener("input", applyFilters);
+    $(id).addEventListener("change", applyFilters);
+  });
+
+  loadReservations();
+</script>
 </body>
 </html>
