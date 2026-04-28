@@ -131,7 +131,7 @@ app.get("/api/reservations", requireAdmin, async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("reservations")
-      .select("*")
+      .select("id, name, phone, car, service_type, preferred_date, memo, created_at")
       .order("created_at", { ascending: false });
 
     if (error) {
