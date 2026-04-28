@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>루마 버텍스 당진 채운점</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: "Pretendard", "Noto Sans KR", Arial, sans-serif; background: #f5f7fa; color: #111; overflow-x: hidden; }
+    header { position: fixed; top: 0; width: 100%; z-index: 1000; padding: 18px 8%; display: flex; justify-content: space-between; align-items: center; background: rgba(10, 10, 10, 0.86); backdrop-filter: blur(10px); color: white; transition: padding .35s ease, background .35s ease, box-shadow .35s ease; }
+    header.scrolled { padding: 12px 8%; background: rgba(10, 10, 10, 0.94); box-shadow: 0 10px 28px rgba(0,0,0,.22); }
+    header h2 { letter-spacing: 1px; font-size: 22px; }
+    nav a { color: white; text-decoration: none; margin-left: 24px; font-size: 15px; transition: opacity .28s ease; }
+    nav a:hover { opacity: .72; }
+    .hero { height: 95vh; padding: 150px 8% 80px; background: linear-gradient(rgba(0,0,0,.65), rgba(0,0,0,.65)), url("/images/after_front.jpg") center/cover no-repeat; color: white; display: flex; flex-direction: column; justify-content: center; animation: heroZoom 1.4s ease both; background-size: 108%; transition: background-size 1.2s ease; }
+    .hero:hover { background-size: 112%; }
+    .hero h1 { font-size: 56px; margin-bottom: 18px; line-height: 1.2; }
+    .hero p { font-size: 21px; color: #ddd; margin-bottom: 35px; }
+    .hero h1, .hero p, .hero > div { opacity: 0; transform: translateY(28px); animation: heroUp .9s ease forwards; }
+    .hero h1 { animation-delay: .15s; } .hero p { animation-delay: .35s; } .hero > div { animation-delay: .55s; }
+    .btn { display: inline-block; padding: 15px 28px; border-radius: 50px; font-weight: bold; text-decoration: none; margin: 6px 10px 6px 0; transition: transform .28s ease, box-shadow .28s ease, opacity .28s ease; }
+    .btn:hover, button:hover { transform: translateY(-4px); box-shadow: 0 12px 26px rgba(0,0,0,.18); }
+    .blue { background: #1e73ff; color: white; } .white { background: white; color: #111; } .dark { background: #111; color: white; } .kakao { background: #FEE500; color: #111; }
+    section { padding: 90px 8%; } .white-section { background: white; } .gray-section { background: #f5f7fa; }
+    .title { text-align: center; margin-bottom: 48px; } .title h2 { font-size: 36px; margin-bottom: 12px; } .title p { color: #666; font-size: 17px; }
+    .about { display: grid; grid-template-columns: 1fr 1fr; gap: 45px; align-items: center; }
+    .about img { width: 100%; border-radius: 28px; box-shadow: 0 15px 35px rgba(0,0,0,.18); transition: transform .55s ease, filter .55s ease; }
+    .about img:hover { transform: scale(1.045); filter: brightness(1.04); }
+    .about-text h3 { font-size: 28px; margin-bottom: 20px; } .about-text p { line-height: 1.9; color: #444; font-size: 17px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 24px; }
+    .card { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,.08); transition: transform .38s ease, box-shadow .38s ease; }
+    .card:hover { transform: translateY(-10px) scale(1.015); box-shadow: 0 18px 42px rgba(0,0,0,.14); }
+    .card img { width: 100%; height: 170px; object-fit: cover; transition: transform .55s ease, filter .55s ease; }
+    .card:hover img { transform: scale(1.045); filter: brightness(1.04); }
+    .card div { padding: 26px; } .card h3 { font-size: 22px; margin-bottom: 12px; } .card p { color: #555; line-height: 1.6; }
+    .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+    .gallery img { width: 100%; height: 230px; object-fit: cover; border-radius: 22px; box-shadow: 0 10px 25px rgba(0,0,0,.12); transition: transform .55s ease, filter .55s ease; }
+    .gallery img:hover { transform: scale(1.045); filter: brightness(1.04); }
+    .before-after-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 26px; }
+    .before-after-card { background: white; border-radius: 28px; overflow: hidden; box-shadow: 0 16px 42px rgba(0,0,0,.1); transition: transform .38s ease, box-shadow .38s ease; }
+    .before-after-card:hover { transform: translateY(-8px); box-shadow: 0 22px 52px rgba(0,0,0,.16); }
+    .before-after-head { padding: 24px 26px 0; }
+    .before-after-head h3 { font-size: 23px; margin-bottom: 8px; }
+    .before-after-head p { color: #666; line-height: 1.65; font-size: 15px; }
+    .compare-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 22px; }
+    .compare-photo { position: relative; overflow: hidden; min-height: 310px; background: #111; }
+    .compare-photo:first-child { border-radius: 20px 0 0 20px; }
+    .compare-photo:last-child { border-radius: 0 20px 20px 0; }
+    .compare-photo img { width: 100%; height: 100%; min-height: 310px; object-fit: cover; display: block; transition: transform .6s ease, filter .6s ease; }
+    .before-after-card:hover .compare-photo img { transform: scale(1.045); filter: brightness(1.03); }
+    .photo-label { position: absolute; left: 14px; top: 14px; padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 900; color: white; background: rgba(0,0,0,.72); backdrop-filter: blur(8px); }
+    .photo-label.after { background: rgba(30,115,255,.88); }
+    .result-note { margin: 0 22px 24px; padding: 15px 16px; border-radius: 16px; background: #f5f7fa; color: #444; line-height: 1.65; font-size: 15px; }
+    .before-after-cta { margin-top: 34px; text-align: center; }
+    .reserve-box { max-width: 720px; margin: auto; background: white; padding: 42px; border-radius: 28px; box-shadow: 0 15px 35px rgba(0,0,0,.1); text-align: center; }
+    .reserve-box h3 { font-size: 28px; margin-bottom: 15px; } .reserve-box p { color: #555; line-height: 1.8; margin-bottom: 28px; }
+    form { margin-top: 28px; text-align: left; }
+    input, select, textarea { width: 100%; padding: 15px; margin-bottom: 14px; border: 1px solid #ddd; border-radius: 12px; font-size: 15px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #1e73ff; box-shadow: 0 0 0 4px rgba(30,115,255,.12); transition: box-shadow .25s ease, border-color .25s ease; }
+    button { width: 100%; padding: 16px; border: none; border-radius: 14px; background: #111; color: white; font-size: 17px; font-weight: bold; cursor: pointer; transition: transform .28s ease, box-shadow .28s ease; }
+    .form-message { margin-top: 14px; padding: 13px 15px; border-radius: 12px; display: none; line-height: 1.6; font-size: 15px; text-align: center; }
+    .form-message.success { display: block; background: #ecfdf3; color: #067647; border: 1px solid #abefc6; }
+    .form-message.error { display: block; background: #fef3f2; color: #b42318; border: 1px solid #fecdca; }
+    .info { text-align: center; font-size: 18px; line-height: 2.1; }
+    .map-box { margin-top: 25px; border-radius: 24px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,.12); }
+    .floating-contact { position: fixed; right: 22px; bottom: 22px; z-index: 1200; display: flex; flex-direction: column; gap: 10px; }
+    .floating-contact a { width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: 800; box-shadow: 0 12px 28px rgba(0,0,0,.18); transition: transform .28s ease, box-shadow .28s ease; }
+    .floating-contact a:hover { transform: translateY(-5px) scale(1.04); box-shadow: 0 18px 38px rgba(0,0,0,.24); }
+    .floating-kakao { background: #FEE500; color: #111; } .floating-call { background: #111; color: #fff; }
+    footer { background: #111; color: #aaa; text-align: center; padding: 35px; font-size: 14px; }
+    .reveal { opacity: 0; transform: translateY(46px); transition: opacity .85s ease, transform .85s ease; will-change: opacity, transform; } .reveal.show { opacity: 1; transform: translateY(0); }
+    .reveal-left { opacity: 0; transform: translateX(-46px); transition: opacity .9s ease, transform .9s ease; } .reveal-right { opacity: 0; transform: translateX(46px); transition: opacity .9s ease, transform .9s ease; } .reveal-left.show, .reveal-right.show { opacity: 1; transform: translateX(0); }
+    @keyframes heroUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes heroZoom { from { filter: brightness(.86); } to { filter: brightness(1); } }
+    @media(max-width: 768px) { header { display: block; text-align: center; } nav { margin-top: 12px; } nav a { margin: 0 7px; font-size: 13px; } .hero h1 { font-size: 36px; } .hero p { font-size: 17px; } .about { grid-template-columns: 1fr; } .btn { margin-bottom: 10px; } .compare-pair { grid-template-columns: 1fr; } .compare-photo:first-child { border-radius: 20px 20px 0 0; } .compare-photo:last-child { border-radius: 0 0 20px 20px; } .compare-photo, .compare-photo img { min-height: 260px; } }
+  </style>
+</head>
+<body>
+<header><h2>LLumar VERTEX</h2><nav><a href="#about">소개</a><a href="#service">시공</a><a href="#gallery">사진</a><a href="#beforeafter">전후</a><a href="#reserve">예약</a><a href="#location">오시는 길</a></nav></header>
+<section class="hero"><h1>루마 버텍스<br>당진 채운점</h1><p>프리미엄 썬팅 · PPF · 유리막 코팅 · 신차패키지 전문 시공</p><div><a href="#reserve" class="btn blue">예약하기</a><a href="tel:01031187540" class="btn white">전화 상담</a><a href="#" onclick="openKakaoTalk()" class="btn kakao">카카오톡 상담</a></div></section>
+<section id="about" class="white-section"><div class="title"><h2>매장 소개</h2><p>차량의 품격과 실내 보호를 위한 프리미엄 시공</p></div><div class="about"><img src="/images/after_side.jpg" alt="루마 버텍스 당진 채운점 시공 차량"><div class="about-text"><h3>꼼꼼한 상담과 정교한 시공</h3><p>루마 버텍스 당진 채운점은 자동차 썬팅, PPF, 유리막 코팅, 가죽 코팅, 신차패키지 시공을 전문으로 합니다.<br><br>고객님의 차량 상태와 주행 환경에 맞춰 필름 등급과 시공 방식을 안내하며, 깔끔한 마감과 높은 만족도를 목표로 작업합니다.</p></div></div></section>
+<section id="service" class="gray-section"><div class="title"><h2>시공 서비스</h2><p>썬팅부터 신차패키지까지 한 번에 상담 가능합니다</p></div><div class="cards"><div class="card"><img src="/images/after_front.jpg" alt="썬팅"><div><h3>자동차 썬팅</h3><p>열차단, 자외선 차단, 프라이버시 보호를 위한 프리미엄 필름 시공</p></div></div><div class="card"><img src="/images/before_side.jpg" alt="PPF"><div><h3>PPF 보호필름</h3><p>생활 스크래치와 도장면 손상을 줄이는 차량 보호 시공</p></div></div><div class="card"><img src="/images/after_rear.jpg" alt="유리막 코팅"><div><h3>유리막 코팅</h3><p>차량 외장 광택 유지와 오염 방지를 위한 코팅 관리</p></div></div><div class="card"><img src="/images/after_side.jpg" alt="신차패키지"><div><h3>신차패키지</h3><p>썬팅, 코팅, 블랙박스 등 신차 출고 후 필요한 작업 상담</p></div></div></div></section>
+<section id="gallery" class="white-section"><div class="title"><h2>프리미엄 시공 이미지</h2><p>실제 매장에서 촬영한 차량 시공 사진입니다</p></div><div class="gallery"><img src="/images/before_front.jpg" alt="전면 유리 시공 전"><img src="/images/before_side.jpg" alt="측면 유리 시공 전"><img src="/images/during_rear.jpg" alt="후면 유리 작업 중"><img src="/images/after_front.jpg" alt="전면 유리 시공 후"><img src="/images/after_side.jpg" alt="측면 유리 시공 후"><img src="/images/after_rear.jpg" alt="후면 유리 시공 후"></div></section>
+<section id="beforeafter" class="gray-section"><div class="title"><h2>썬팅 전후 예시</h2><p>실제 매장 차량 사진으로 보는 시공 전·후 느낌입니다</p></div><div class="before-after-grid"><article class="before-after-card"><div class="before-after-head"><h3>전면 유리 시공 전·후</h3><p>밝게 보이는 전면 유리에서 시공 후 더 차분하고 고급스러운 톤으로 변화됩니다.</p></div><div class="compare-pair"><div class="compare-photo"><img src="/images/before_front.jpg" alt="전면 유리 썬팅 전 예시"><span class="photo-label">BEFORE</span></div><div class="compare-photo"><img src="/images/after_front.jpg" alt="전면 유리 썬팅 후 예시"><span class="photo-label after">AFTER</span></div></div><p class="result-note">전면 시야는 확보하면서 외부에서 보이는 실내 노출감을 줄이는 방향의 시공 예시입니다.</p></article><article class="before-after-card"><div class="before-after-head"><h3>측면 유리 시공 전·후</h3><p>측면부는 실내 보호와 프라이버시 체감 차이가 가장 잘 드러나는 구간입니다.</p></div><div class="compare-pair"><div class="compare-photo"><img src="/images/before_side.jpg" alt="측면 유리 썬팅 전 예시"><span class="photo-label">BEFORE</span></div><div class="compare-photo"><img src="/images/after_side.jpg" alt="측면 유리 썬팅 후 예시"><span class="photo-label after">AFTER</span></div></div><p class="result-note">측면 유리의 색감이 정돈되면서 차량 외관이 더 묵직하고 깔끔해 보입니다.</p></article><article class="before-after-card"><div class="before-after-head"><h3>후면 유리 작업 과정·완료</h3><p>필름 부착 과정과 완료 후 외관 차이를 함께 보여주는 예시입니다.</p></div><div class="compare-pair"><div class="compare-photo"><img src="/images/during_rear.jpg" alt="후면 유리 썬팅 작업 중 예시"><span class="photo-label">작업 중</span></div><div class="compare-photo"><img src="/images/after_rear.jpg" alt="후면 유리 썬팅 완료 예시"><span class="photo-label after">완료 후</span></div></div><p class="result-note">후면까지 균일하게 마감하면 전체 차량의 톤이 자연스럽게 맞춰집니다.</p></article></div><div class="before-after-cta"><a href="#reserve" class="btn blue">내 차량 상담 예약하기</a><a href="tel:01031187540" class="btn dark">전화 상담</a></div></section>
+<section id="reserve" class="white-section"><div class="title"><h2>예약 문의</h2><p>네이버 예약, 전화 상담, 카카오톡 상담, DB 저장 예약이 가능합니다</p></div><div class="reserve-box"><h3>빠른 예약 상담</h3><p>예약 전 차량명과 희망 시공 항목을 알려주시면 더 정확한 상담이 가능합니다.</p><a href="#" onclick="openNaverReservation()" class="btn blue">네이버 예약하기</a><a href="tel:01031187540" class="btn dark">전화하기</a><a href="#" onclick="openKakaoTalk()" class="btn kakao">카카오톡 상담</a><form onsubmit="saveReservation(event)"><input id="name" type="text" placeholder="이름" required><input id="phone" type="text" placeholder="연락처" required><input id="car" type="text" placeholder="차량명"><select id="serviceType"><option>희망 시공 선택</option><option>썬팅</option><option>PPF</option><option>유리막 코팅</option><option>가죽 코팅</option><option>신차패키지</option></select><input id="date" type="date"><textarea id="memo" rows="5" placeholder="문의사항"></textarea><button type="submit">예약 DB 저장하기</button></form><div id="formMessage" class="form-message"></div></div></section>
+<section id="location" class="gray-section"><div class="title"><h2>오시는 길</h2><p>방문 전 예약 상담을 권장드립니다</p></div><div class="info"><p><strong>주소</strong> : 당진시 서부로 22</p><p><strong>예약 전화</strong> : 010-3118-7540</p><p><a href="https://map.naver.com/p/search/당진시%20서부로%2022" target="_blank">네이버 지도에서 보기</a></p></div><div class="map-box"><iframe src="https://maps.google.com/maps?q=당진시%20서부로%2022&t=&z=15&ie=UTF8&iwloc=&output=embed" width="100%" height="360" style="border:0;" loading="lazy"></iframe></div></section>
+<div class="floating-contact" aria-label="빠른 상담 버튼"><a href="#" onclick="openKakaoTalk()" class="floating-kakao" title="카카오톡 상담">톡</a><a href="tel:01031187540" class="floating-call" title="전화 상담">☎</a></div>
+<footer>© 루마 버텍스 당진 채운점. All rights reserved.</footer>
+<script>
+  const NAVER_RESERVATION_URL = "https://booking.naver.com/booking/6/bizes/1644639";
+  const KAKAO_CHANNEL_URL = "여기에_카카오톡채널_링크를_넣으세요";
+  function openNaverReservation() { window.open(NAVER_RESERVATION_URL, "_blank"); }
+  function openKakaoTalk() { if (KAKAO_CHANNEL_URL === "여기에_카카오톡채널_링크를_넣으세요") { alert("카카오톡 채널 링크를 먼저 입력해주세요."); return; } window.open(KAKAO_CHANNEL_URL, "_blank"); }
+  function showFormMessage(type, text) { const box = document.getElementById("formMessage"); box.className = "form-message " + type; box.textContent = text; }
+  async function saveReservation(e) {
+    e.preventDefault();
+    const reservationData = { name: document.getElementById("name").value, phone: document.getElementById("phone").value, car: document.getElementById("car").value, serviceType: document.getElementById("serviceType").value, preferredDate: document.getElementById("date").value, memo: document.getElementById("memo").value };
+    try {
+      const response = await fetch("/api/reservations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(reservationData) });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.message || "예약 저장 실패");
+      showFormMessage("success", "예약 문의가 DB에 저장되었습니다. 확인 후 연락드리겠습니다.");
+      e.target.reset();
+    } catch (error) { console.error(error); showFormMessage("error", "서버 저장에 실패했습니다. 서버 실행 여부를 확인하거나 전화/카카오톡으로 문의해주세요."); }
+  }
+  const headerEl = document.querySelector("header");
+  window.addEventListener("scroll", () => { window.scrollY > 40 ? headerEl.classList.add("scrolled") : headerEl.classList.remove("scrolled"); });
+  const revealTargets = document.querySelectorAll(".title, .card, .gallery img, .before-after-card, .before-after-cta, .reserve-box, .info, .map-box");
+  revealTargets.forEach((el, index) => { el.classList.add("reveal"); el.style.transitionDelay = `${Math.min(index % 4, 3) * 0.08}s`; });
+  const aboutImg = document.querySelector(".about img"); const aboutText = document.querySelector(".about-text");
+  if (aboutImg) aboutImg.classList.add("reveal-left"); if (aboutText) aboutText.classList.add("reveal-right");
+  const motionObserver = new IntersectionObserver((entries) => { entries.forEach((entry) => { if (entry.isIntersecting) { entry.target.classList.add("show"); motionObserver.unobserve(entry.target); } }); }, { threshold: .18, rootMargin: "0px 0px -40px 0px" });
+  document.querySelectorAll(".reveal, .reveal-left, .reveal-right").forEach((el) => motionObserver.observe(el));
+</script>
+</body>
+</html>

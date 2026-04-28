@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>예약 DB 관리 | 루마 버텍스 당진 채운점</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Pretendard", "Noto Sans KR", Arial, sans-serif;
+      background: #f4f6fb;
+      color: #111827;
+      min-height: 100vh;
+    }
+    .admin-header {
+      background: linear-gradient(135deg, #111827, #1f2937);
+      color: white;
+      padding: 34px 6% 28px;
+      box-shadow: 0 14px 35px rgba(17,24,39,.22);
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+    }
+    .brand small { color: #9ca3af; display: block; margin-bottom: 8px; }
+    .brand h1 { font-size: 30px; letter-spacing: -0.5px; }
+    .home-link {
+      color: #111827;
+      background: white;
+      text-decoration: none;
+      padding: 12px 18px;
+      border-radius: 999px;
+      font-weight: 800;
+      box-shadow: 0 10px 22px rgba(0,0,0,.18);
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+    }
+    .summary-card {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 18px;
+      padding: 18px;
+      backdrop-filter: blur(10px);
+    }
+    .summary-card span { color: #cbd5e1; font-size: 14px; }
+    .summary-card strong { display: block; margin-top: 8px; font-size: 28px; }
+    main { padding: 34px 6% 60px; }
+    .panel {
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 14px 38px rgba(15,23,42,.08);
+      padding: 24px;
+      margin-bottom: 22px;
+    }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr auto auto;
+      gap: 12px;
+      align-items: center;
+    }
+    input, select, button {
+      height: 48px;
+      border-radius: 14px;
+      border: 1px solid #d1d5db;
+      padding: 0 14px;
+      font-size: 15px;
+      font-family: inherit;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+    }
+    button {
+      border: none;
+      cursor: pointer;
+      font-weight: 800;
+      transition: transform .22s ease, box-shadow .22s ease, opacity .22s ease;
+    }
+    button:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(15,23,42,.15); }
+    .btn-dark { background: #111827; color: white; }
+    .btn-blue { background: #2563eb; color: white; }
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 18px;
+      border: 1px solid #e5e7eb;
+    }
+    table {
+      width: 100%;
+      min-width: 1050px;
+      border-collapse: collapse;
+      background: white;
+    }
+    thead { background: #f9fafb; }
+    th, td {
+      padding: 16px 14px;
+      text-align: left;
+      border-bottom: 1px solid #eef2f7;
+      font-size: 14px;
+      vertical-align: top;
+    }
+    th {
+      color: #374151;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    tbody tr { transition: background .2s ease; }
+    tbody tr:hover { background: #f8fbff; }
+    .id-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-weight: 800;
+    }
+    .service-badge {
+      display: inline-block;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #ecfdf3;
+      color: #067647;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .phone-link {
+      color: #2563eb;
+      font-weight: 800;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .memo-cell {
+      max-width: 260px;
+      line-height: 1.55;
+      color: #4b5563;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .empty {
+      text-align: center;
+      padding: 48px 20px;
+      color: #6b7280;
+      line-height: 1.8;
+    }
+    .loading {
+      padding: 42px;
+      text-align: center;
+      color: #6b7280;
+    }
+    .mobile-cards { display: none; }
+    .reservation-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 10px 24px rgba(15,23,42,.06);
+    }
+    .reservation-card .top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .reservation-card h3 { font-size: 18px; }
+    .reservation-card p { margin: 8px 0; color: #4b5563; line-height: 1.55; }
+    .reservation-card strong { color: #111827; }
+    .notice {
+      margin-top: 14px;
+      color: #6b7280;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    @media (max-width: 900px) {
+      .toolbar { grid-template-columns: 1fr 1fr; }
+      .toolbar input { grid-column: 1 / -1; }
+    }
+    @media (max-width: 700px) {
+      .admin-header { padding: 28px 5%; }
+      main { padding: 24px 5% 46px; }
+      .brand h1 { font-size: 24px; }
+      .toolbar { grid-template-columns: 1fr; }
+      .table-wrap { display: none; }
+      .mobile-cards { display: block; }
+      .panel { padding: 18px; border-radius: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="admin-header">
+    <div class="header-top">
+      <div class="brand">
+        <small>Reservation Database</small>
+        <h1>예약 DB 확인</h1>
+      </div>
+      <a class="home-link" href="/">홈페이지로 이동</a>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card"><span>전체 예약</span><strong id="totalCount">0</strong></div>
+      <div class="summary-card"><span>오늘 접수</span><strong id="todayCount">0</strong></div>
+      <div class="summary-card"><span>검색 결과</span><strong id="filteredCount">0</strong></div>
+      <div class="summary-card"><span>최근 접수</span><strong id="latestDate">-</strong></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="toolbar">
+        <input id="searchInput" type="search" placeholder="이름, 연락처, 차량명, 메모 검색" />
+        <select id="serviceFilter">
+          <option value="">전체 시공</option>
+          <option value="썬팅">썬팅</option>
+          <option value="PPF">PPF</option>
+          <option value="유리막 코팅">유리막 코팅</option>
+          <option value="가죽 코팅">가죽 코팅</option>
+          <option value="신차패키지">신차패키지</option>
+        </select>
+        <input id="dateFilter" type="date" />
+        <button class="btn-dark" onclick="loadReservations()">새로고침</button>
+        <button class="btn-blue" onclick="downloadCSV()">CSV 저장</button>
+      </div>
+      <p class="notice">이 페이지는 관리자 비밀번호로 보호됩니다. 공용 PC에서는 브라우저를 종료해 주세요.</p>
+    </section>
+
+    <section class="panel">
+      <div id="loading" class="loading">예약 목록을 불러오는 중입니다.</div>
+      <div class="table-wrap" id="tableWrap" style="display:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>번호</th>
+              <th>접수일</th>
+              <th>이름</th>
+              <th>연락처</th>
+              <th>차량명</th>
+              <th>희망 시공</th>
+              <th>희망 날짜</th>
+              <th>문의사항</th>
+            </tr>
+          </thead>
+          <tbody id="reservationTable"></tbody>
+        </table>
+      </div>
+      <div class="mobile-cards" id="mobileCards"></div>
+      <div id="empty" class="empty" style="display:none;">표시할 예약이 없습니다.<br>검색 조건을 바꾸거나 새로고침을 눌러주세요.</div>
+    </section>
+  </main>
+
+  <script>
+    let reservations = [];
+    let filteredReservations = [];
+
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHTML(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatDate(value) {
+      if (!value) return "-";
+      return value.replace("T", " ").slice(0, 16);
+    }
+
+    function isToday(value) {
+      if (!value) return false;
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, "0");
+      const dd = String(today.getDate()).padStart(2, "0");
+      return String(value).startsWith(`${yyyy}-${mm}-${dd}`);
+    }
+
+    async function loadReservations() {
+      $("loading").style.display = "block";
+      $("tableWrap").style.display = "none";
+      $("mobileCards").innerHTML = "";
+      $("empty").style.display = "none";
+
+      try {
+        const res = await fetch("/api/reservations");
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.message || "조회 실패");
+        reservations = data.reservations || [];
+        applyFilters();
+      } catch (err) {
+        console.error(err);
+        $("loading").innerHTML = "예약 목록을 불러오지 못했습니다.<br>서버 실행 여부를 확인해주세요.";
+      }
+    }
+
+    function applyFilters() {
+      const keyword = $("searchInput").value.trim().toLowerCase();
+      const service = $("serviceFilter").value;
+      const date = $("dateFilter").value;
+
+      filteredReservations = reservations.filter((item) => {
+        const keywordText = [item.name, item.phone, item.car, item.service_type, item.preferred_date, item.memo]
+          .join(" ").toLowerCase();
+        const matchKeyword = !keyword || keywordText.includes(keyword);
+        const matchService = !service || item.service_type === service;
+        const matchDate = !date || item.preferred_date === date;
+        return matchKeyword && matchService && matchDate;
+      });
+
+      renderSummary();
+      renderTable();
+      renderMobileCards();
+    }
+
+    function renderSummary() {
+      $("totalCount").textContent = reservations.length;
+      $("todayCount").textContent = reservations.filter((r) => isToday(r.created_at)).length;
+      $("filteredCount").textContent = filteredReservations.length;
+      $("latestDate").textContent = reservations[0] ? formatDate(reservations[0].created_at) : "-";
+    }
+
+    function renderTable() {
+      const tbody = $("reservationTable");
+      tbody.innerHTML = "";
+      $("loading").style.display = "none";
+
+      if (filteredReservations.length === 0) {
+        $("tableWrap").style.display = "none";
+        $("empty").style.display = "block";
+        return;
+      }
+
+      $("empty").style.display = "none";
+      $("tableWrap").style.display = "block";
+
+      filteredReservations.forEach((r) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><span class="id-badge">#${escapeHTML(r.id)}</span></td>
+          <td>${escapeHTML(formatDate(r.created_at))}</td>
+          <td><strong>${escapeHTML(r.name)}</strong></td>
+          <td><a class="phone-link" href="tel:${escapeHTML(r.phone)}">${escapeHTML(r.phone)}</a></td>
+          <td>${escapeHTML(r.car || "-")}</td>
+          <td><span class="service-badge">${escapeHTML(r.service_type || "미선택")}</span></td>
+          <td>${escapeHTML(r.preferred_date || "-")}</td>
+          <td class="memo-cell">${escapeHTML(r.memo || "-")}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderMobileCards() {
+      const wrap = $("mobileCards");
+      wrap.innerHTML = "";
+      if (filteredReservations.length === 0) return;
+
+      filteredReservations.forEach((r) => {
+        const card = document.createElement("article");
+        card.className = "reservation-card";
+        card.innerHTML = `
+          <div class="top">
+            <h3>${escapeHTML(r.name)}</h3>
+            <span class="id-badge">#${escapeHTML(r.id)}</span>
+          </div>
+          <p><strong>접수일</strong> ${escapeHTML(formatDate(r.created_at))}</p>
+          <p><strong>연락처</strong> <a class="phone-link" href="tel:${escapeHTML(r.phone)}">${escapeHTML(r.phone)}</a></p>
+          <p><strong>차량명</strong> ${escapeHTML(r.car || "-")}</p>
+          <p><strong>희망 시공</strong> <span class="service-badge">${escapeHTML(r.service_type || "미선택")}</span></p>
+          <p><strong>희망 날짜</strong> ${escapeHTML(r.preferred_date || "-")}</p>
+          <p><strong>문의사항</strong><br>${escapeHTML(r.memo || "-")}</p>
+        `;
+        wrap.appendChild(card);
+      });
+    }
+
+    function downloadCSV() {
+      const header = ["번호", "접수일", "이름", "연락처", "차량명", "희망시공", "희망날짜", "문의사항"];
+      const rows = filteredReservations.map((r) => [
+        r.id, formatDate(r.created_at), r.name, r.phone, r.car, r.service_type, r.preferred_date, r.memo
+      ]);
+      const csv = [header, ...rows].map((row) =>
+        row.map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`).join(",")
+      ).join("\n");
+
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `reservations_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    ["searchInput", "serviceFilter", "dateFilter"].forEach((id) => {
+      $(id).addEventListener("input", applyFilters);
+      $(id).addEventListener("change", applyFilters);
+    });
+
+    loadReservations();
+  </script>
+</body>
+</html>
