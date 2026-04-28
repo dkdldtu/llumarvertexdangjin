@@ -1,15 +1,13 @@
 const express = require("express");
 const path = require("path");
+const sqlite3 = require("sqlite3").verbose();
+const fs = require("fs");
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
-app.use(express.static(path.join(__dirname, "public")));
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
 
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
