@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /api/reservations
+
+Sitemap: https://llumarvertexdangjin.kro.kr/sitemap.xml
